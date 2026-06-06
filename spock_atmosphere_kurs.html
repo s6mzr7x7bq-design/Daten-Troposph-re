@@ -1,0 +1,741 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c-bg: #020a0f;
+  --c-panel: #050f16;
+  --c-border: #0ff;
+  --c-dim: #0a6e6e;
+  --c-text: #a0ffe0;
+  --c-head: #00ffcc;
+  --c-warn: #ff4e00;
+  --c-gold: #ffd700;
+  --c-err: #ff0055;
+  --c-green: #00ff88;
+  --c-muted: #2a5a5a;
+  --c-accent: #00e5ff;
+}
+
+body { background: var(--c-bg); font-family: 'Share Tech Mono', monospace; color: var(--c-text); min-height: 100vh; overflow-x: hidden; }
+
+/* SCANLINES */
+body::before {
+  content: '';
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,200,0.015) 2px, rgba(0,255,200,0.015) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+/* FLICKER ANIMATION */
+@keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:0.7} 95%{opacity:1} 97%{opacity:0.85} 99%{opacity:1} }
+@keyframes blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} }
+@keyframes glitch {
+  0%,100%{transform:translate(0)} 5%{transform:translate(-3px,1px)} 10%{transform:translate(2px,-1px)} 15%{transform:translate(0)}
+  45%{transform:translate(1px,2px)} 50%{transform:translate(-1px,0)} 55%{transform:translate(0)}
+  85%{transform:translate(2px,-2px)} 90%{transform:translate(-1px,1px)}
+}
+@keyframes scanDown { 0%{top:-10%} 100%{top:110%} }
+@keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-0.5deg)} 75%{transform:rotate(0.5deg)} }
+@keyframes pulse { 0%,100%{box-shadow:0 0 5px var(--c-border),0 0 10px rgba(0,255,255,0.3)} 50%{box-shadow:0 0 15px var(--c-border),0 0 30px rgba(0,255,255,0.5)} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes errFlash { 0%,100%{background:transparent} 50%{background:rgba(255,0,85,0.05)} }
+
+.glitch { animation: glitch 4s infinite; }
+.flicker { animation: flicker 6s infinite; }
+
+/* HEADER */
+.header {
+  background: var(--c-panel);
+  border-bottom: 2px solid var(--c-border);
+  padding: 0.75rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  animation: pulse 3s infinite;
+  position: relative; overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute; left: 0; top: 0; width: 100%; height: 3px;
+  background: linear-gradient(90deg,transparent,var(--c-border),transparent);
+  animation: scanDown 3s linear infinite;
+}
+.logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem; font-weight: 900;
+  color: var(--c-head);
+  letter-spacing: 0.1em;
+}
+.logo span { color: var(--c-warn); }
+.status-bar { display: flex; gap: 1rem; font-size: 0.7rem; color: var(--c-muted); }
+.status-item { display: flex; align-items: center; gap: 4px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-err { background: var(--c-err); animation: blink 1s infinite; }
+.dot-ok { background: var(--c-green); }
+.dot-warn { background: var(--c-gold); animation: blink 1.5s infinite; }
+
+/* SPOCK INTRO BOX */
+.spock-box {
+  margin: 1rem 1.5rem;
+  border: 1px solid var(--c-dim);
+  background: rgba(5,20,30,0.8);
+  padding: 1rem 1.25rem;
+  position: relative;
+  animation: errFlash 4s infinite;
+}
+.spock-box::before {
+  content: '⚠ BORDSYSTEM INSTABIL ⚠';
+  position: absolute; top: -10px; left: 12px;
+  font-size: 0.65rem; background: var(--c-panel); padding: 0 6px;
+  color: var(--c-warn); letter-spacing: 0.15em;
+}
+.spock-avatar {
+  display: flex; gap: 1rem; align-items: flex-start;
+}
+.avatar-icon {
+  font-size: 2.5rem; line-height: 1;
+  font-family: 'Orbitron', monospace;
+  color: var(--c-head);
+  flex-shrink: 0;
+  border: 1px solid var(--c-dim);
+  padding: 0.4rem 0.6rem;
+  background: rgba(0,255,200,0.05);
+}
+.spock-text { font-size: 0.85rem; line-height: 1.6; }
+.spock-name { color: var(--c-gold); font-family: 'Orbitron', monospace; font-size: 0.75rem; margin-bottom: 0.3rem; }
+.corrupted { color: var(--c-err); animation: glitch 2s infinite; display: inline-block; }
+
+/* POINTS BAR */
+.points-bar {
+  margin: 0 1.5rem 1rem;
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--c-panel);
+  border: 1px solid var(--c-dim);
+  padding: 0.5rem 1rem;
+}
+.points-label { font-family: 'Orbitron', monospace; font-size: 0.7rem; color: var(--c-muted); }
+.points-val { font-family: 'Orbitron', monospace; font-size: 1.4rem; color: var(--c-gold); font-weight: 700; }
+.points-bar-fill { flex: 1; height: 8px; background: var(--c-muted); border: 1px solid var(--c-dim); overflow: hidden; }
+.points-bar-inner { height: 100%; background: var(--c-gold); transition: width 0.5s ease; }
+
+/* TASK NAVIGATION */
+.task-nav { display: flex; margin: 0 1.5rem 1rem; gap: 4px; }
+.task-btn {
+  flex: 1; padding: 0.5rem 0.25rem; background: var(--c-panel);
+  border: 1px solid var(--c-dim); font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem; color: var(--c-muted); cursor: pointer;
+  transition: all 0.2s; text-align: center; letter-spacing: 0.05em;
+}
+.task-btn:hover { border-color: var(--c-border); color: var(--c-head); }
+.task-btn.active { border-color: var(--c-border); color: var(--c-head); background: rgba(0,255,255,0.05); }
+.task-btn.done { border-color: var(--c-green); color: var(--c-green); }
+
+/* TASK PANELS */
+.task-panel { display: none; margin: 0 1.5rem 1.5rem; animation: fadeIn 0.3s ease; }
+.task-panel.active { display: block; }
+
+.panel-header {
+  background: rgba(0,255,200,0.05);
+  border: 1px solid var(--c-border); border-bottom: none;
+  padding: 0.6rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-family: 'Orbitron', monospace; font-size: 0.8rem; color: var(--c-head); }
+.panel-body { border: 1px solid var(--c-border); padding: 1.25rem; background: rgba(5,15,20,0.9); }
+
+/* AUFGABE 1: ATMOSPHÄRENSCHICHTEN */
+.layers-container { display: flex; gap: 1rem; }
+.layers-col { flex: 1; }
+.layers-col-label { font-size: 0.65rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.layer-item {
+  padding: 0.5rem 0.75rem; margin-bottom: 4px;
+  border: 1px solid var(--c-dim); background: rgba(0,40,60,0.6);
+  font-size: 0.8rem; cursor: grab; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+  user-select: none;
+}
+.layer-item:hover { border-color: var(--c-border); color: var(--c-head); }
+.layer-item.dragging { opacity: 0.4; cursor: grabbing; }
+.layer-item.drag-over { border-color: var(--c-gold); background: rgba(255,215,0,0.1); }
+.layer-num { font-family: 'Orbitron', monospace; font-size: 0.65rem; color: var(--c-muted); min-width: 16px; }
+.sort-zone {
+  min-height: 280px; border: 1px dashed var(--c-dim); padding: 4px;
+  background: rgba(0,10,15,0.4);
+}
+.sort-zone.drag-active { border-color: var(--c-gold); background: rgba(255,215,0,0.03); }
+
+/* AUFGABE 2: LÜCKENTEXT */
+.fill-text { font-size: 0.85rem; line-height: 2.2; }
+.gap-input {
+  display: inline-block;
+  border: none; border-bottom: 1px solid var(--c-border);
+  background: transparent; color: var(--c-accent);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.85rem;
+  min-width: 120px; padding: 0 4px; outline: none;
+  vertical-align: middle;
+}
+.gap-input:focus { border-bottom-color: var(--c-gold); }
+.gap-input.correct { border-bottom-color: var(--c-green); color: var(--c-green); }
+.gap-input.wrong { border-bottom-color: var(--c-err); color: var(--c-err); animation: shake 0.3s; }
+.error-word { background: rgba(255,0,85,0.15); border: 1px solid var(--c-err); padding: 0 4px; border-radius: 2px; cursor: pointer; }
+.error-word.corrected { background: rgba(0,255,136,0.1); border-color: var(--c-green); color: var(--c-green); }
+.error-word:hover { background: rgba(255,0,85,0.25); }
+
+/* AUFGABE 3: ZUORDNUNG */
+.assign-container { display: flex; flex-direction: column; gap: 1rem; }
+.definition-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+.def-card {
+  padding: 0.75rem 1rem; border: 1px solid var(--c-dim);
+  background: rgba(0,20,30,0.8); font-size: 0.8rem; line-height: 1.5;
+  cursor: pointer; transition: all 0.2s;
+}
+.def-card:hover { border-color: var(--c-border); }
+.def-card.selected { border-color: var(--c-gold); background: rgba(255,215,0,0.05); }
+.def-card .def-id { font-family: 'Orbitron', monospace; font-size: 0.65rem; color: var(--c-muted); margin-bottom: 0.3rem; }
+
+.assign-targets { display: flex; gap: 1rem; }
+.assign-target {
+  flex: 1; min-height: 80px; border: 1px dashed var(--c-dim);
+  padding: 0.75rem; text-align: center;
+  transition: all 0.2s; cursor: pointer;
+}
+.assign-target:hover { border-color: var(--c-border); }
+.assign-target.filled { border-style: solid; border-color: var(--c-gold); background: rgba(255,215,0,0.05); }
+.assign-target.correct { border-color: var(--c-green); background: rgba(0,255,136,0.05); }
+.assign-target.wrong { border-color: var(--c-err); background: rgba(255,0,85,0.05); }
+.target-name { font-family: 'Orbitron', monospace; font-size: 0.75rem; color: var(--c-head); margin-bottom: 0.5rem; }
+.target-assigned { font-size: 0.75rem; color: var(--c-gold); line-height: 1.4; }
+
+/* AUFGABE 4: TEMPERATUR */
+.thermo-statements { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.statement-item {
+  padding: 0.6rem 0.8rem; border: 1px solid var(--c-dim);
+  display: flex; align-items: center; gap: 0.75rem;
+  font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  background: rgba(0,15,25,0.6);
+}
+.statement-item:hover { border-color: var(--c-border); }
+.statement-item.true-ans { border-color: var(--c-green); background: rgba(0,255,136,0.05); }
+.statement-item.false-ans { border-color: var(--c-err); background: rgba(255,0,85,0.05); }
+.stmt-badge {
+  font-family: 'Orbitron', monospace; font-size: 0.6rem;
+  padding: 2px 6px; border: 1px solid var(--c-dim); min-width: 36px; text-align: center;
+}
+.stmt-badge.true-badge { border-color: var(--c-green); color: var(--c-green); background: rgba(0,255,136,0.1); }
+.stmt-badge.false-badge { border-color: var(--c-err); color: var(--c-err); background: rgba(255,0,85,0.1); }
+.stmt-icon { font-size: 1rem; min-width: 20px; text-align: center; font-family:'VT323',monospace; }
+
+/* GRAPH DISPLAY */
+.graph-container {
+  border: 1px solid var(--c-dim); padding: 0.5rem;
+  margin-bottom: 1rem; background: rgba(255,255,255,0.02);
+}
+.graph-img { width: 100%; max-width: 500px; display: block; margin: 0 auto; filter: sepia(1) hue-rotate(140deg) brightness(0.7) contrast(1.2); opacity: 0.85; }
+
+/* BUTTONS */
+.btn-primary {
+  background: transparent; border: 1px solid var(--c-border);
+  color: var(--c-head); font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem; padding: 0.5rem 1.25rem; cursor: pointer;
+  letter-spacing: 0.1em; transition: all 0.2s; margin-top: 1rem;
+}
+.btn-primary:hover { background: rgba(0,255,255,0.08); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-reset { border-color: var(--c-dim); color: var(--c-muted); margin-left: 0.5rem; }
+.btn-reset:hover { border-color: var(--c-warn); color: var(--c-warn); background: rgba(255,78,0,0.05); }
+
+/* FEEDBACK */
+.feedback-box {
+  margin-top: 0.75rem; padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--c-green);
+  background: rgba(0,255,136,0.05);
+  font-size: 0.8rem; line-height: 1.5;
+  display: none;
+}
+.feedback-box.show { display: block; animation: fadeIn 0.3s ease; }
+.feedback-box.err { border-color: var(--c-err); background: rgba(255,0,85,0.05); }
+.feedback-box.neutral { border-color: var(--c-gold); background: rgba(255,215,0,0.05); }
+
+/* PROGRESS CHIP */
+.progress-chip {
+  font-size: 0.65rem; font-family: 'Orbitron', monospace;
+  border: 1px solid var(--c-dim); padding: 2px 8px; color: var(--c-muted);
+}
+.progress-chip.done { border-color: var(--c-green); color: var(--c-green); }
+
+/* NOISE OVERLAY */
+.noise {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 9998; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+</style>
+
+<div class="noise"></div>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Selbstlernkurs: Die Atmosphäre – Interaktive Lernplattform mit Spock dem Astronauten</h2>
+
+<div class="header flicker">
+  <div class="logo">U.S.S. <span>ATMOS</span> — LERNMODUL</div>
+  <div class="status-bar">
+    <div class="status-item"><div class="status-dot dot-err"></div>NAVIGATION: FEHLER</div>
+    <div class="status-item"><div class="status-dot dot-warn"></div>HÖHE: TROPOSPHÄRE</div>
+    <div class="status-item"><div class="status-dot dot-ok"></div>AUDIO: OK</div>
+  </div>
+</div>
+
+<div class="spock-box">
+  <div class="spock-avatar">
+    <div class="avatar-icon">S∏</div>
+    <div class="spock-text">
+      <div class="spock-name">// SPOCK — CHEFWISSENSCHAFTLER, STERNENFLOTTE //</div>
+      <span class="corrupted">[SIGNAL GESTÖRT]</span> ... Achtung, Crew. Meine Instrumente spielen <span class="corrupted">v€rrückt</span>. Ich befinde mich derzeit in der <strong style="color:var(--c-gold)">Troposphäre</strong> und die Datenspeicher sind <span class="corrupted">k0rrumpi€rt</span>. Die Fakten über die Atmosphäre sind durcheinandergeraten. Ich brauche eure Hilfe, um die <span style="color:var(--c-head)">korrekte Ordnung wiederherzustellen</span>. Jede erfolgreiche Korrektur bringt euch <span style="color:var(--c-gold)">Energiepunkte</span>. Die Bordsysteme danken euch. <span class="corrupted">∑nd€ Ü∫€rtragung.</span>
+    </div>
+  </div>
+</div>
+
+<div class="points-bar">
+  <span class="points-label">ENERGIE-PUNKTE:</span>
+  <span class="points-val" id="pts-display">0</span>
+  <div class="points-bar-fill"><div class="points-bar-inner" id="pts-bar" style="width:0%"></div></div>
+  <span class="points-label" id="pts-max">/ 40 MAX</span>
+</div>
+
+<div class="task-nav">
+  <button class="task-btn active" id="nav-1" onclick="showTask(1)">AUFG. 1<br><span style="font-size:0.6rem">SCHICHTEN</span></button>
+  <button class="task-btn" id="nav-2" onclick="showTask(2)">AUFG. 2<br><span style="font-size:0.6rem">LÜCKENTEXT</span></button>
+  <button class="task-btn" id="nav-3" onclick="showTask(3)">AUFG. 3<br><span style="font-size:0.6rem">ZUORDNUNG</span></button>
+  <button class="task-btn" id="nav-4" onclick="showTask(4)">AUFG. 4<br><span style="font-size:0.6rem">TEMPERATUR</span></button>
+</div>
+
+<!-- AUFGABE 1 -->
+<div class="task-panel active" id="task-1">
+  <div class="panel-header">
+    <span class="panel-title">AUFGABE 1 — ATMOSPHÄRENSCHICHTEN SORTIEREN</span>
+    <span class="progress-chip" id="chip-1">0 / 5 KORREKT</span>
+  </div>
+  <div class="panel-body">
+    <p style="font-size:0.8rem;color:var(--c-muted);margin-bottom:1rem">Die Datenspeicher sind durcheinandergeraten. Bringe die Schichten der Atmosphäre in die richtige Reihenfolge — von unten (Erdoberfläche) nach oben. Ziehe und lege ab!</p>
+    <div class="layers-container">
+      <div class="layers-col">
+        <div class="layers-col-label">KORRUPTE REIHENFOLGE (ziehen)</div>
+        <div id="source-list"></div>
+      </div>
+      <div class="layers-col">
+        <div class="layers-col-label">KORREKTE REIHENFOLGE (ablegen)</div>
+        <div class="sort-zone" id="sort-zone"></div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="checkTask1()">ÜBERPRÜFEN ▶</button>
+    <button class="btn-primary btn-reset" onclick="resetTask1()">RESET</button>
+    <div class="feedback-box" id="fb-1"></div>
+  </div>
+</div>
+
+<!-- AUFGABE 2 -->
+<div class="task-panel" id="task-2">
+  <div class="panel-header">
+    <span class="panel-title">AUFGABE 2 — KORRUMPIERTER DATENTEXT</span>
+    <span class="progress-chip" id="chip-2">OFFEN</span>
+  </div>
+  <div class="panel-body">
+    <p style="font-size:0.8rem;color:var(--c-muted);margin-bottom:1rem">Der Text enthält Fehler (rot markiert = anklicken zum Korrigieren) und Lücken (Felder ausfüllen). Stelle den korrekten Text wieder her!</p>
+    <div class="fill-text" id="fill-text-content"></div>
+    <button class="btn-primary" onclick="checkTask2()">ÜBERPRÜFEN ▶</button>
+    <button class="btn-primary btn-reset" onclick="resetTask2()">RESET</button>
+    <div class="feedback-box" id="fb-2"></div>
+  </div>
+</div>
+
+<!-- AUFGABE 3 -->
+<div class="task-panel" id="task-3">
+  <div class="panel-header">
+    <span class="panel-title">AUFGABE 3 — BEGRIFFE ZUORDNEN</span>
+    <span class="progress-chip" id="chip-3">OFFEN</span>
+  </div>
+  <div class="panel-body">
+    <p style="font-size:0.8rem;color:var(--c-muted);margin-bottom:1rem">Wähle eine Erklärung aus und weise sie dem richtigen Begriff zu. Klicke auf eine Erklärung, dann auf den passenden Begriff.</p>
+    <div class="assign-container">
+      <div>
+        <div class="layers-col-label" style="margin-bottom:0.5rem">ERKLÄRUNGEN (wählen):</div>
+        <div class="definition-cards" id="def-cards"></div>
+      </div>
+      <div>
+        <div class="layers-col-label" style="margin-bottom:0.5rem">BEGRIFFE (zuweisen):</div>
+        <div class="assign-targets" id="assign-targets"></div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="checkTask3()">ÜBERPRÜFEN ▶</button>
+    <button class="btn-primary btn-reset" onclick="resetTask3()">RESET</button>
+    <div class="feedback-box" id="fb-3"></div>
+  </div>
+</div>
+
+<!-- AUFGABE 4 -->
+<div class="task-panel" id="task-4">
+  <div class="panel-header">
+    <span class="panel-title">AUFGABE 4 — TEMPERATURVERLAUF ANALYSIEREN</span>
+    <span class="progress-chip" id="chip-4">OFFEN</span>
+  </div>
+  <div class="panel-body">
+    <p style="font-size:0.8rem;color:var(--c-muted);margin-bottom:1rem">Analysiere die Graphik und entscheide: Wahr oder Falsch? Klicke auf eine Aussage, um sie zu markieren.</p>
+    <div class="graph-container">
+      <img src="/mnt/user-data/uploads/fff213.jpg" alt="Diagramm der Atmosphärenschichten mit Temperaturverlauf" class="graph-img"/>
+    </div>
+    <div class="thermo-statements" id="thermo-stmts"></div>
+    <button class="btn-primary" onclick="checkTask4()">ÜBERPRÜFEN ▶</button>
+    <button class="btn-primary btn-reset" onclick="resetTask4()">RESET</button>
+    <div class="feedback-box" id="fb-4"></div>
+  </div>
+</div>
+
+<div style="height:2rem"></div>
+
+<script>
+let totalPoints = 0;
+const maxPoints = 40;
+const taskDone = {1:false,2:false,3:false,4:false};
+const taskPoints = {1:10,2:10,3:10,4:10};
+
+function showTask(n) {
+  document.querySelectorAll('.task-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.task-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('task-'+n).classList.add('active');
+  document.getElementById('nav-'+n).classList.add('active');
+}
+
+function addPoints(n, taskId) {
+  if (taskDone[taskId]) return;
+  taskDone[taskId] = true;
+  totalPoints += n;
+  document.getElementById('pts-display').textContent = totalPoints;
+  document.getElementById('pts-bar').style.width = Math.min(100, (totalPoints/maxPoints)*100)+'%';
+  const nav = document.getElementById('nav-'+taskId);
+  nav.classList.add('done');
+  const chip = document.getElementById('chip-'+taskId);
+  if (chip) { chip.textContent = '+'+n+' PTS'; chip.classList.add('done'); }
+}
+
+function showFeedback(id, msg, type='') {
+  const fb = document.getElementById('fb-'+id);
+  fb.textContent = msg;
+  fb.className = 'feedback-box show'+(type?' '+type:'');
+}
+
+/* ===== AUFGABE 1 ===== */
+const correctOrder = ['Troposphäre','Stratosphäre','Mesosphäre','Thermosphäre','Exosphäre'];
+const scrambled = ['Thermosphäre','Troposphäre','Exosphäre','Mesosphäre','Stratosphäre'];
+let sortedItems = [];
+let dragSrc = null;
+
+function buildTask1() {
+  const src = document.getElementById('source-list');
+  src.innerHTML = '';
+  sortedItems = [];
+  document.getElementById('sort-zone').innerHTML = '';
+  scrambled.forEach((name,i) => {
+    const el = document.createElement('div');
+    el.className = 'layer-item';
+    el.draggable = true;
+    el.dataset.name = name;
+    el.innerHTML = `<span class="layer-num">${(i+1).toString().padStart(2,'0')}</span>${name}`;
+    el.addEventListener('dragstart', e => { dragSrc=el; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    src.appendChild(el);
+  });
+  const zone = document.getElementById('sort-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-active'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-active'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-active');
+    if (!dragSrc) return;
+    const newEl = dragSrc.cloneNode(true);
+    newEl.classList.remove('dragging');
+    newEl.dataset.name = dragSrc.dataset.name;
+    newEl.draggable = true;
+    const pos = sortedItems.length+1;
+    newEl.querySelector('.layer-num').textContent = pos.toString().padStart(2,'0');
+    newEl.addEventListener('dragstart', e2 => { dragSrc=newEl; newEl.classList.add('dragging'); e2.dataTransfer.effectAllowed='move'; });
+    newEl.addEventListener('dragend', () => newEl.classList.remove('dragging'));
+    newEl.addEventListener('click', () => {
+      zone.removeChild(newEl);
+      sortedItems = sortedItems.filter(x=>x!==newEl);
+      renumberZone();
+    });
+    sortedItems.push(newEl);
+    zone.appendChild(newEl);
+    if (dragSrc.parentElement === document.getElementById('source-list')) dragSrc.style.opacity='0.3';
+    dragSrc = null;
+    renumberZone();
+    document.getElementById('chip-1').textContent = sortedItems.length+' / 5 PLATZIERT';
+  });
+}
+
+function renumberZone() {
+  sortedItems.forEach((el,i) => { el.querySelector('.layer-num').textContent=(i+1).toString().padStart(2,'0'); });
+}
+
+function checkTask1() {
+  if (sortedItems.length < 5) { showFeedback(1,'⚠ Platziere alle 5 Schichten in der Zone!','neutral'); return; }
+  const userOrder = sortedItems.map(el=>el.dataset.name);
+  let correct = 0;
+  userOrder.forEach((name,i) => { if(name===correctOrder[i]) correct++; });
+  if (correct===5) {
+    showFeedback(1,'✓ PERFEKT! Alle 5 Schichten korrekt sortiert. +10 Energiepunkte erhalten.','');
+    addPoints(10,1);
+  } else {
+    showFeedback(1,`✗ ${correct}/5 korrekt. Überprüfe die Reihenfolge — die unterste Schicht ist die Troposphäre.`,'err');
+  }
+}
+
+function resetTask1() {
+  taskDone[1]=false; totalPoints=Math.max(0,totalPoints-taskPoints[1]);
+  document.getElementById('pts-display').textContent=totalPoints;
+  document.getElementById('pts-bar').style.width=Math.min(100,(totalPoints/maxPoints)*100)+'%';
+  document.getElementById('nav-1').classList.remove('done');
+  document.getElementById('chip-1').classList.remove('done');
+  document.getElementById('fb-1').className='feedback-box';
+  buildTask1();
+}
+
+buildTask1();
+
+/* ===== AUFGABE 2 ===== */
+const textSegments = [
+  { type:'text', val:'Die Atmosphäre ist für das Überleben der Pflanzen, Tiere und Menschen ' },
+  { type:'error', wrong:'unwichtig', correct:'wichtig' },
+  { type:'text', val:'. Das ist der Fall, da sie uns den ' },
+  { type:'gap', answer:'Sauerstoff', width:'110px' },
+  { type:'text', val:' liefert, den wir brauchen — für die Pflanzen ist hingegen das ' },
+  { type:'gap', answer:'Kohlenstoffdioxid', width:'155px' },
+  { type:'text', val:' in der Luft überlebenswichtig. Außerdem sorgt die Erdatmosphäre dafür, dass einige Sonnenstrahlen abgefangen werden und es auf der Erde nicht zu ' },
+  { type:'error', wrong:'kalt', correct:'heiß' },
+  { type:'text', val:' ist. Zusätzlich ist auch für das Gegenteil gesorgt: Mithilfe des natürlichen Treibhauseffekts ist sichergestellt, dass es nicht zu ' },
+  { type:'error', wrong:'heiß', correct:'kalt' },
+  { type:'text', val:' wird. Durch Gase, wie Kohlenstoffdioxid oder ' },
+  { type:'gap', answer:'Methan', width:'80px' },
+  { type:'text', val:', wird die Erde nämlich zusätzlich erhitzt.' },
+];
+
+let errorCorrected = {};
+let gapRefs = [];
+
+function buildTask2() {
+  const cont = document.getElementById('fill-text-content');
+  cont.innerHTML = '';
+  errorCorrected = {};
+  gapRefs = [];
+  textSegments.forEach((seg,i) => {
+    if (seg.type==='text') {
+      cont.appendChild(document.createTextNode(seg.val));
+    } else if (seg.type==='error') {
+      const span = document.createElement('span');
+      span.className = 'error-word';
+      span.dataset.idx = i;
+      span.dataset.correct = seg.correct;
+      span.dataset.wrong = seg.wrong;
+      span.textContent = seg.wrong;
+      errorCorrected[i] = false;
+      span.addEventListener('click', function() {
+        if (!errorCorrected[i]) {
+          this.textContent = seg.correct;
+          this.classList.add('corrected');
+          errorCorrected[i] = true;
+        } else {
+          this.textContent = seg.wrong;
+          this.classList.remove('corrected');
+          errorCorrected[i] = false;
+        }
+      });
+      cont.appendChild(span);
+    } else if (seg.type==='gap') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'gap-input';
+      inp.style.width = seg.width;
+      inp.dataset.answer = seg.answer.toLowerCase();
+      inp.placeholder = '???';
+      gapRefs.push(inp);
+      cont.appendChild(inp);
+    }
+  });
+}
+
+function checkTask2() {
+  let correct = 0; let total = 0;
+  Object.keys(errorCorrected).forEach(k => { total++; if(errorCorrected[k]) correct++; });
+  gapRefs.forEach(inp => {
+    total++;
+    const val = inp.value.trim().toLowerCase();
+    if (val === inp.dataset.answer) { correct++; inp.classList.add('correct'); inp.classList.remove('wrong'); }
+    else { inp.classList.add('wrong'); inp.classList.remove('correct'); }
+  });
+  if (correct===total) {
+    showFeedback(2,'✓ EXZELLENT! Alle Fehler korrigiert und Lücken korrekt ausgefüllt. +10 Energiepunkte!','');
+    addPoints(10,2);
+  } else {
+    showFeedback(2,`✗ ${correct}/${total} korrekt. Tipp: Klicke auf rot markierte Wörter, um sie zu korrigieren. Fehlerhafte Felder sind rot hinterlegt.`,'err');
+  }
+}
+
+function resetTask2() {
+  taskDone[2]=false; totalPoints=Math.max(0,totalPoints-taskPoints[2]);
+  document.getElementById('pts-display').textContent=totalPoints;
+  document.getElementById('pts-bar').style.width=Math.min(100,(totalPoints/maxPoints)*100)+'%';
+  document.getElementById('nav-2').classList.remove('done');
+  const chip=document.getElementById('chip-2'); chip.textContent='OFFEN'; chip.classList.remove('done');
+  document.getElementById('fb-2').className='feedback-box';
+  buildTask2();
+}
+
+buildTask2();
+
+/* ===== AUFGABE 3 ===== */
+const definitions = [
+  { id:'A', text:'Diese Schicht umfasst alle Bereiche der Atmosphäre, die Gase wie Stickstoff, Sauerstoff und andere Moleküle enthalten — also die "normale" Lufthülle, in der Wetter und Klima stattfinden. Der Name leitet sich vom griechischen Wort für "neutral" ab.' },
+  { id:'B', text:'Diese Schicht liegt in ca. 60–1000 km Höhe und enthält viele ionisierte Teilchen, die durch Sonnenstrahlung entstehen. Sie ermöglicht die Reflexion von Radiowellen und ist verantwortlich für das Polarlicht (Aurora).' },
+];
+const terms = [
+  { name:'Ionosphäre', correctDef:'B' },
+  { name:'Neutrosphäre', correctDef:'A' },
+];
+let selectedDef = null;
+let assignments = {};
+
+function buildTask3() {
+  selectedDef = null; assignments = {};
+  const dc = document.getElementById('def-cards');
+  dc.innerHTML = '';
+  definitions.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'def-card';
+    el.dataset.id = d.id;
+    el.innerHTML = `<div class="def-id">DEFINITION ${d.id}</div>${d.text}`;
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.def-card').forEach(x=>x.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedDef = d.id;
+    });
+    dc.appendChild(el);
+  });
+  const at = document.getElementById('assign-targets');
+  at.innerHTML = '';
+  terms.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'assign-target';
+    el.dataset.term = t.name;
+    el.innerHTML = `<div class="target-name">${t.name}</div><div class="target-assigned" id="assigned-${t.name}">— leer —</div>`;
+    el.addEventListener('click', function() {
+      if (!selectedDef) { showFeedback(3,'⚠ Wähle zuerst eine Erklärung aus!','neutral'); return; }
+      assignments[t.name] = selectedDef;
+      document.getElementById('assigned-'+t.name).textContent = 'Definition '+selectedDef+' zugewiesen';
+      this.classList.add('filled');
+      document.querySelectorAll('.def-card').forEach(x=>x.classList.remove('selected'));
+      selectedDef = null;
+    });
+    at.appendChild(el);
+  });
+}
+
+function checkTask3() {
+  if (Object.keys(assignments).length < 2) { showFeedback(3,'⚠ Weise beide Begriffe zu!','neutral'); return; }
+  let correct = 0;
+  terms.forEach(t => {
+    const el = document.querySelector(`[data-term="${t.name}"]`);
+    if (assignments[t.name]===t.correctDef) { correct++; el.classList.add('correct'); el.classList.remove('wrong','filled'); }
+    else { el.classList.add('wrong'); el.classList.remove('correct','filled'); }
+  });
+  if (correct===2) {
+    showFeedback(3,'✓ KORREKT! Ionosphäre (ionisierte Teilchen, Polarlicht) und Neutrosphäre (neutrale Gase, Wetter) richtig zugeordnet. +10 Punkte!','');
+    addPoints(10,3);
+  } else {
+    showFeedback(3,'✗ Nicht ganz richtig. Tipp: "Iono-" kommt von Ionen — ionisierte Teilchen. "Neutro-" steht für neutrales Gas.','err');
+  }
+}
+
+function resetTask3() {
+  taskDone[3]=false; totalPoints=Math.max(0,totalPoints-taskPoints[3]);
+  document.getElementById('pts-display').textContent=totalPoints;
+  document.getElementById('pts-bar').style.width=Math.min(100,(totalPoints/maxPoints)*100)+'%';
+  document.getElementById('nav-3').classList.remove('done');
+  const chip=document.getElementById('chip-3'); chip.textContent='OFFEN'; chip.classList.remove('done');
+  document.getElementById('fb-3').className='feedback-box';
+  buildTask3();
+}
+
+buildTask3();
+
+/* ===== AUFGABE 4 ===== */
+const statements = [
+  { text:'In der Troposphäre (0–15 km) nimmt die Temperatur mit steigender Höhe ab.', correct:true },
+  { text:'In der Stratosphäre nimmt die Temperatur mit steigender Höhe zu.', correct:true },
+  { text:'In der Mesosphäre steigt die Temperatur mit zunehmender Höhe stark an.', correct:false },
+  { text:'Die höchsten Temperaturen der gesamten Atmosphäre werden in der Thermosphäre erreicht (über 200 °C).', correct:true },
+  { text:'Der Temperaturverlauf ist in allen Schichten gleichmäßig und steigt kontinuierlich nach oben an.', correct:false },
+];
+let stmtAnswers = {};
+
+function buildTask4() {
+  stmtAnswers = {};
+  const cont = document.getElementById('thermo-stmts');
+  cont.innerHTML = '';
+  statements.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = 'statement-item';
+    el.dataset.idx = i;
+    el.innerHTML = `<span class="stmt-icon" id="stmt-icon-${i}">?</span><span class="stmt-badge" id="stmt-badge-${i}">—</span><span>${s.text}</span>`;
+    el.addEventListener('click', function() {
+      const cur = stmtAnswers[i];
+      if (cur===undefined) { stmtAnswers[i]=true; }
+      else if (cur===true) { stmtAnswers[i]=false; }
+      else { delete stmtAnswers[i]; }
+      updateStmt(i, el);
+    });
+    cont.appendChild(el);
+  });
+}
+
+function updateStmt(i, el) {
+  const badge = document.getElementById('stmt-badge-'+i);
+  const icon = document.getElementById('stmt-icon-'+i);
+  const val = stmtAnswers[i];
+  el.classList.remove('true-ans','false-ans');
+  badge.classList.remove('true-badge','false-badge');
+  if (val===true) {
+    el.classList.add('true-ans'); badge.classList.add('true-badge');
+    badge.textContent='WAHR'; icon.textContent='✓';
+  } else if (val===false) {
+    el.classList.add('false-ans'); badge.classList.add('false-badge');
+    badge.textContent='FALSCH'; icon.textContent='✗';
+  } else {
+    badge.textContent='—'; icon.textContent='?';
+  }
+}
+
+function checkTask4() {
+  if (Object.keys(stmtAnswers).length < statements.length) {
+    showFeedback(4,'⚠ Beantworte alle '+statements.length+' Aussagen!','neutral'); return;
+  }
+  let correct=0;
+  statements.forEach((s,i)=>{ if(stmtAnswers[i]===s.correct) correct++; });
+  if (correct===statements.length) {
+    showFeedback(4,'✓ BRILLANT! Alle Aussagen korrekt bewertet. Der Temperaturverlauf ist komplex — er wechselt in jeder Schicht die Richtung! +10 Energiepunkte!','');
+    addPoints(10,4);
+  } else {
+    showFeedback(4,`✗ ${correct}/${statements.length} korrekt. Schaue dir die Temperaturkurve in der Graphik genau an — besonders den Wechsel zwischen Tropo-, Strato- und Mesosphäre.`,'err');
+  }
+}
+
+function resetTask4() {
+  taskDone[4]=false; totalPoints=Math.max(0,totalPoints-taskPoints[4]);
+  document.getElementById('pts-display').textContent=totalPoints;
+  document.getElementById('pts-bar').style.width=Math.min(100,(totalPoints/maxPoints)*100)+'%';
+  document.getElementById('nav-4').classList.remove('done');
+  const chip=document.getElementById('chip-4'); chip.textContent='OFFEN'; chip.classList.remove('done');
+  document.getElementById('fb-4').className='feedback-box';
+  buildTask4();
+}
+
+buildTask4();
+</script>
