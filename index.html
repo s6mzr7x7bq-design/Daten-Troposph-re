@@ -342,7 +342,9 @@ body::before {
   <div class="panel-body">
     <p style="font-size:0.8rem;color:var(--c-muted);margin-bottom:1rem">Der Text enthält Fehler (rot markiert = anklicken zum Korrigieren) und Lücken (Felder ausfüllen). Stelle den korrekten Text wieder her!</p>
     <div class="fill-text" id="fill-text-content"></div>
+    <div id="hint-box-2" style="display:none;margin-top:0.75rem;padding:0.6rem 0.8rem;border-left:3px solid var(--c-gold);background:rgba(255,215,0,0.05);font-size:0.8rem;line-height:1.9;"></div>
     <button class="btn-primary" onclick="checkTask2()">ÜBERPRÜFEN ▶</button>
+    <button class="btn-primary" style="border-color:var(--c-gold);color:var(--c-gold);margin-left:0.5rem" onclick="showTask2Hints()">TIPP ▶</button>
     <button class="btn-primary btn-reset" onclick="resetTask2()">RESET</button>
     <div class="feedback-box" id="fb-2"></div>
   </div>
@@ -442,6 +444,7 @@ function buildTask1() {
     el.innerHTML = `<span class="layer-num">${(i+1).toString().padStart(2,'0')}</span>${name}`;
     el.addEventListener('dragstart', e => { dragSrc=el; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    addTouchDrag(el, false);
     src.appendChild(el);
   });
   const zone = document.getElementById('sort-zone');
@@ -450,26 +453,82 @@ function buildTask1() {
   zone.addEventListener('drop', e => {
     e.preventDefault(); zone.classList.remove('drag-active');
     if (!dragSrc) return;
-    const newEl = dragSrc.cloneNode(true);
-    newEl.classList.remove('dragging');
-    newEl.dataset.name = dragSrc.dataset.name;
-    newEl.draggable = true;
-    const pos = sortedItems.length+1;
-    newEl.querySelector('.layer-num').textContent = pos.toString().padStart(2,'0');
-    newEl.addEventListener('dragstart', e2 => { dragSrc=newEl; newEl.classList.add('dragging'); e2.dataTransfer.effectAllowed='move'; });
-    newEl.addEventListener('dragend', () => newEl.classList.remove('dragging'));
-    newEl.addEventListener('click', () => {
-      zone.removeChild(newEl);
-      sortedItems = sortedItems.filter(x=>x!==newEl);
-      renumberZone();
-    });
-    sortedItems.push(newEl);
-    zone.appendChild(newEl);
-    if (dragSrc.parentElement === document.getElementById('source-list')) dragSrc.style.opacity='0.3';
+    dropIntoZone(dragSrc);
+    if (dragSrc && dragSrc.parentElement === document.getElementById('source-list')) dragSrc.style.opacity='0.3';
     dragSrc = null;
     renumberZone();
     document.getElementById('chip-1').textContent = sortedItems.length+' / 5 PLATZIERT';
   });
+}
+
+function dropIntoZone(source) {
+  const zone = document.getElementById('sort-zone');
+  const newEl = source.cloneNode(true);
+  newEl.classList.remove('dragging');
+  newEl.dataset.name = source.dataset.name;
+  newEl.draggable = true;
+  const pos = sortedItems.length+1;
+  newEl.querySelector('.layer-num').textContent = pos.toString().padStart(2,'0');
+  newEl.addEventListener('dragstart', e2 => { dragSrc=newEl; newEl.classList.add('dragging'); e2.dataTransfer.effectAllowed='move'; });
+  newEl.addEventListener('dragend', () => newEl.classList.remove('dragging'));
+  newEl.addEventListener('click', () => {
+    zone.removeChild(newEl);
+    sortedItems = sortedItems.filter(x=>x!==newEl);
+    renumberZone();
+    document.getElementById('chip-1').textContent = sortedItems.length+' / 5 PLATZIERT';
+  });
+  addTouchDrag(newEl, true);
+  sortedItems.push(newEl);
+  zone.appendChild(newEl);
+}
+
+function addTouchDrag(el, inZone) {
+  let touchClone = null;
+  let touchOrigin = null;
+
+  el.addEventListener('touchstart', function(e) {
+    touchOrigin = el;
+    dragSrc = el;
+    const touch = e.touches[0];
+    touchClone = el.cloneNode(true);
+    touchClone.style.cssText = `position:fixed;z-index:99999;opacity:0.85;pointer-events:none;width:${el.offsetWidth}px;left:${touch.clientX - el.offsetWidth/2}px;top:${touch.clientY - 20}px;`;
+    document.body.appendChild(touchClone);
+    e.preventDefault();
+  }, { passive: false });
+
+  el.addEventListener('touchmove', function(e) {
+    if (!touchClone) return;
+    const touch = e.touches[0];
+    touchClone.style.left = (touch.clientX - touchClone.offsetWidth/2) + 'px';
+    touchClone.style.top = (touch.clientY - 20) + 'px';
+    e.preventDefault();
+  }, { passive: false });
+
+  el.addEventListener('touchend', function(e) {
+    if (!touchClone) return;
+    const touch = e.changedTouches[0];
+    document.body.removeChild(touchClone);
+    touchClone = null;
+    const zone = document.getElementById('sort-zone');
+    const zoneRect = zone.getBoundingClientRect();
+    if (
+      touch.clientX >= zoneRect.left && touch.clientX <= zoneRect.right &&
+      touch.clientY >= zoneRect.top && touch.clientY <= zoneRect.bottom
+    ) {
+      if (inZone) {
+        // reordering within zone: move to end
+        zone.removeChild(el);
+        sortedItems = sortedItems.filter(x => x !== el);
+        dropIntoZone(el);
+      } else {
+        dropIntoZone(el);
+        el.style.opacity = '0.3';
+      }
+      renumberZone();
+      document.getElementById('chip-1').textContent = sortedItems.length + ' / 5 PLATZIERT';
+    }
+    dragSrc = null;
+  }, { passive: false });
 }
 
 function renumberZone() {
@@ -591,6 +650,21 @@ function resetTask2() {
 
 buildTask2();
 
+function showTask2Hints() {
+  const hints = [
+    'Lücke 1: Der Stoff in der Atmosphäre, den wir Menschen zum Atmen brauchen.',
+    'Lücke 2: Der Stoff in der Atmosphäre, den Pflanzen umwandeln.',
+    'Lücke 3: Die Verdauung von Kühen steht dafür in der Kritik.'
+  ];
+  const box = document.getElementById('hint-box-2');
+  if (box.style.display === 'none') {
+    box.innerHTML = hints.map((h,i) => `<div style="margin-bottom:0.4rem"><span style="color:var(--c-gold);font-family:'Orbitron',monospace;font-size:0.65rem">TIPP ${i+1}:</span> ${h}</div>`).join('');
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
 /* ===== AUFGABE 3 ===== */
 const definitions = [
   { id:'A', text:'Diese Schicht umfasst alle Bereiche der Atmosphäre, die Gase wie Stickstoff, Sauerstoff und andere Moleküle enthalten — also die "normale" Lufthülle, in der Wetter und Klima stattfinden. Der Name leitet sich vom griechischen Wort für "neutral" ab.' },
@@ -671,7 +745,7 @@ const statements = [
   { text:'In der Troposphäre (0–15 km) nimmt die Temperatur mit steigender Höhe ab.', correct:true },
   { text:'In der Stratosphäre nimmt die Temperatur mit steigender Höhe zu.', correct:true },
   { text:'In der Mesosphäre steigt die Temperatur mit zunehmender Höhe stark an.', correct:false },
-  { text:'Die höchsten Temperaturen der gesamten Atmosphäre werden in der Thermosphäre erreicht (über 200 °C).', correct:true },
+  { text:'In der Thermosphäre nimmt der Luftdruck immer weiter zu.', correct:false },
   { text:'Der Temperaturverlauf ist in allen Schichten gleichmäßig und steigt kontinuierlich nach oben an.', correct:false },
 ];
 let stmtAnswers = {};
